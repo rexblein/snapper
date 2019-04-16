@@ -4,21 +4,79 @@ import click
 session = boto3.Session(profile_name='testuser', region_name='us-east-1')
 ec2 = session.resource('ec2')
 
-@click.command()
-def list_instances():
-    all_instances_str = ''
-    for i in ec2.instances.all():
-        i_str = ', '.join((
+def filter_instances(project):
+    instances = []
+
+    if project:
+        filters = [{'Name':'tag:Project', 'Values':[project]}]
+        instances = ec2.instances.filter(Filters=filters)
+    else:
+        instances  = ec2.instances.all()
+
+    return instances
+
+@click.group()
+def instances():
+    """Commands"""
+
+@instances.command('list')
+@click.option('--project', default=None, help="Only instances for project (tag Project:<name>)")
+def list_instances( project ):
+    "List EC2s"
+
+    instances = filter_instances(project)
+
+    for i in instances:
+        tags = { t['Key']: t['Value'] for t in i.tags or [] }
+        line =(', '.join((
             i.id,
             i.instance_type,
             i.placement['AvailabilityZone'],
             i.state['Name'],
             i.public_dns_name,
-        ))
-        all_instances_str += i_str.strip() + '\n'
+            tags.get('Project', '<no project>'))))
+        print(line)
 
-    print(all_instances_str)
-    return all_instances_str
+    return
+
+@instances.command('stop')
+@click.option('--project', default=None, help='Only instances for project')
+def stop_instances(project):
+    "Stop EC2s"
+
+    instances = filter_instances(project)
+
+    if project:
+        filters = [{'Name':'tag:Project', 'Values':[project]}]
+        instances = ec2.instances.filter(Filters=filters)
+    else:
+        instances  = ec2.instances.all()
+
+    for i in instances:
+        print("Stopping {0}...".format(i.id))
+        i.stop()
+
+    return
+
+@instances.command('start')
+@click.option('--project', default=None, help='Only instances for project')
+def stop_instances(project):
+    "Start EC2s"
+
+    instances = filter_instances(project)
+
+    if project:
+        filters = [{'Name':'tag:Project', 'Values':[project]}]
+        instances = ec2.instances.filter(Filters=filters)
+    else:
+        instances  = ec2.instances.all()
+
+    for i in instances:
+        print("Starting {0}...".format(i.id))
+        i.start()
+
+    return
 
 if __name__ == '__main__':
-    list_instances()
+    #print(list_instances())
+    instances()

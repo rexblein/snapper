@@ -1,4 +1,10 @@
-# snapper
-demo
+## Configuring
 
-this is complete trash, you can ignore this project
+`aws configure --project testuser`
+
+## Running
+
+`pipenv run "python snapper_ec2/snapper_ec2.py <command> <--project=PROJECT>""`
+
+*command* is list, start, or stop
+*project* is optional
