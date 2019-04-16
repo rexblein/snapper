@@ -4,8 +4,8 @@
 
 ## Running
 
-`pipenv run "python snapper_ec2/snapper_ec2.py <command> <--project=PROJECT>""`
+`pipenv run "python snapper_ec2/snapper_ec2.py <command> <subcommand> <--project=PROJECT>""`
 
-*command* instances, volumes, list_snapshots
+*command* instances, volumes, snapshots
 *subcommand* is list, start, or stop
 *project* is optional
