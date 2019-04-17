@@ -16,6 +16,11 @@ def filter_instances(project):
 
     return instances
 
+def has_pending_snapshots(volume):
+    snapshots = list(volume.snapshots.all())
+    print("{0} test for pending snapshots".format(volume.id))
+    return snapshots and snapshots[0].state == 'pending'
+
 @click.group()
 def cli():
     """snapper_ec2 manages snapshots"""
@@ -159,6 +164,10 @@ def create_snapshots(project):
             continue
         i.wait_until_stopped()
         for v in i.volumes.all():
+            if has_pending_snapshots(v):
+                print("Skipping {0}, snapshot is pending".format(v.id))
+                continue
+
             print("Creating snapshot of {0} ".format(v.id))
             v.create_snapshot(Description="Created by snapper_ec2")
 
