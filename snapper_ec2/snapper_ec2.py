@@ -26,7 +26,8 @@ def snapshots():
 
 @snapshots.command('list')
 @click.option('--project', default=None, help="Only snapshots for project (tag Project:<name>)")
-def list_snapshots( project ):
+@click.option('--all', 'list_all', default=False, is_flag=True, help="List all snapshots")
+def list_snapshots( project, list_all ):
     "List snapshots"
 
     instances = filter_instances(project)
@@ -35,13 +36,16 @@ def list_snapshots( project ):
         for v in i.volumes.all():
             for s in v.snapshots.all():
                 print(", ".join((
-                   s.id,
-                   v.id,
-                   i.id,
-                   s.state,
-                   s.progress,
-                   s.start_time.strftime("%c")
-                 )))
+                    s.id,
+                    v.id,
+                    i.id,
+                    s.state,
+                    s.progress,
+                    s.start_time.strftime("%c")
+                )))
+
+                if s.state == 'completed' and not list_all:
+                     break
 
     return
 
@@ -110,7 +114,7 @@ def stop_instances(project):
         try:
             i.stop()
         except botocore.exceptions.ClientError as e:
-            print(" Could not stop {0}.".format(i.id) + str(e))
+            print(" Could not stop {0}. ".format(i.id) + str(e))
             continue
 
     return
@@ -133,7 +137,7 @@ def stop_instances(project):
         try:
             i.start()
         except botocore.exceptions.ClientError as e:
-            print(" Could not start {0}.".format(i.id) + str(e))
+            print(" Could not start {0}. ".format(i.id) + str(e))
             continue
 
     return
@@ -155,7 +159,7 @@ def create_snapshots(project):
             continue
         i.wait_until_stopped()
         for v in i.volumes.all():
-            print("Creating snapshot of {0}".format(v.id))
+            print("Creating snapshot of {0} ".format(v.id))
             v.create_snapshot(Description="Created by snapper_ec2")
 
         print("Starting {0}... ".format(i.id))
