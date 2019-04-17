@@ -1,4 +1,5 @@
 import boto3
+import botocore
 import click
 
 session = boto3.Session(profile_name='testuser', region_name='us-east-1')
@@ -106,7 +107,11 @@ def stop_instances(project):
 
     for i in instances:
         print("Stopping {0}...".format(i.id))
-        i.stop()
+        try:
+            i.stop()
+        except botocore.exceptions.ClientError as e:
+            print(" Could not stop {0}.".format(i.id) + str(e))
+            continue
 
     return
 
@@ -125,7 +130,11 @@ def stop_instances(project):
 
     for i in instances:
         print("Starting {0}...".format(i.id))
-        i.start()
+        try:
+            i.start()
+        except botocore.exceptions.ClientError as e:
+            print(" Could not start {0}.".format(i.id) + str(e))
+            continue
 
     return
 
@@ -137,14 +146,19 @@ def create_snapshots(project):
     instances = filter_instances(project)
 
     for i in instances:
-        print("Stopping {0}... ".format(i.id))
 
-        i.stop()
+        print("Stopping {0}... ".format(i.id))
+        try:
+            i.stop()
+        except bitocore.exceptions.ClientError as e:
+            print(" Could not stop {0}. ".format(i.id) + str(e))
+            continue
         i.wait_until_stopped()
         for v in i.volumes.all():
-            print("Creating snapshots off {0}".format(v.id))
+            print("Creating snapshot of {0}".format(v.id))
             v.create_snapshot(Description="Created by snapper_ec2")
-        print("Stopping {0}... ".format(i.id))
+
+        print("Starting {0}... ".format(i.id))
 
         i.start()
         i.wait_until_running()
