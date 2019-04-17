@@ -26,7 +26,7 @@ def snapshots():
 @snapshots.command('list')
 @click.option('--project', default=None, help="Only snapshots for project (tag Project:<name>)")
 def list_snapshots( project ):
-    "List volumes"
+    "List snapshots"
 
     instances = filter_instances(project)
 
@@ -137,10 +137,18 @@ def create_snapshots(project):
     instances = filter_instances(project)
 
     for i in instances:
+        print("Stopping {0}... ".format(i.id))
+
+        i.stop()
+        i.wait_until_stopped()
         for v in i.volumes.all():
-            print("Creating snapshots off {0}".format(v_id))
-            v.create_snapshot(Descriptions="Created by snapper_ec2")
-            
+            print("Creating snapshots off {0}".format(v.id))
+            v.create_snapshot(Description="Created by snapper_ec2")
+        print("Stopping {0}... ".format(i.id))
+
+        i.start()
+        i.wait_until_running()
+    print("Completed task")
     return
 
 if __name__ == '__main__':
