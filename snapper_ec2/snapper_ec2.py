@@ -101,10 +101,12 @@ def list_instances( project ):
 
     return
 
-@instances.command('stop')
+
+
+@instances.command('reboot')
 @click.option('--project', default=None, help='Only instances for project')
-def stop_instances(project):
-    "Stop EC2s"
+def reboot_instances(project):
+    "Reboot EC2s"
 
     instances = filter_instances(project)
 
@@ -115,11 +117,11 @@ def stop_instances(project):
         instances  = ec2.instances.all()
 
     for i in instances:
-        print("Stopping {0}...".format(i.id))
+        print("Rebooting {0}...".format(i.id))
         try:
-            i.stop()
+            i.reboot()
         except botocore.exceptions.ClientError as e:
-            print(" Could not stop {0}. ".format(i.id) + str(e))
+            print(" Could not reboot {0}. ".format(i.id) + str(e))
             continue
 
     return
