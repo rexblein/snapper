@@ -9,3 +9,4 @@
 *command* instances, volumes, snapshots
 *subcommand* is list, start, reboot, or stop
 *project* is optional
+*force* is optional

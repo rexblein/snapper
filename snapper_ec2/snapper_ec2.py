@@ -21,6 +21,7 @@ def has_pending_snapshots(volume):
     print("{0} test for pending snapshots".format(volume.id))
     return snapshots and snapshots[0].state == 'pending'
 
+
 @click.group()
 def cli():
     """snapper_ec2 manages snapshots"""
@@ -105,7 +106,8 @@ def list_instances( project ):
 
 @instances.command('reboot')
 @click.option('--project', default=None, help='Only instances for project')
-def reboot_instances(project):
+@click.option('--force', default=False, is_flag=True, help="Force reboots")
+def reboot_instances(project, force):
     "Reboot EC2s"
 
     instances = filter_instances(project)
@@ -113,8 +115,11 @@ def reboot_instances(project):
     if project:
         filters = [{'Name':'tag:Project', 'Values':[project]}]
         instances = ec2.instances.filter(Filters=filters)
-    else:
+    elif force:
         instances  = ec2.instances.all()
+    else:
+        print('Use the --force flag for batch reboots')
+        return
 
     for i in instances:
         print("Rebooting {0}...".format(i.id))
@@ -128,7 +133,8 @@ def reboot_instances(project):
 
 @instances.command('start')
 @click.option('--project', default=None, help='Only instances for project')
-def stop_instances(project):
+@click.option('--force', default=False, is_flag=True, help="Force start procedures")
+def stop_instances(project, force):
     "Start EC2s"
 
     instances = filter_instances(project)
@@ -136,8 +142,11 @@ def stop_instances(project):
     if project:
         filters = [{'Name':'tag:Project', 'Values':[project]}]
         instances = ec2.instances.filter(Filters=filters)
-    else:
+    elif force:
         instances  = ec2.instances.all()
+    else:
+        print('Use the --force flag for batch starts')
+        return
 
     for i in instances:
         print("Starting {0}...".format(i.id))
@@ -149,12 +158,49 @@ def stop_instances(project):
 
     return
 
+@instances.command('stop')
+@click.option('--project', default=None, help='Only instances for project')
+@click.option('--force', default=False, is_flag=True, help="Force start procedures")
+def stop_instances(project, force):
+    "Stop EC2s"
+
+    instances = filter_instances(project)
+
+    if project:
+        filters = [{'Name':'tag:Project', 'Values':[project]}]
+        instances = ec2.instances.filter(Filters=filters)
+    elif force:
+        instances  = ec2.instances.all()
+    else:
+        print('Use the --force flag for batch starts')
+        return
+
+    for i in instances:
+        print("Stopping {0}...".format(i.id))
+        try:
+            i.stop()
+        except botocore.exceptions.ClientError as e:
+            print(" Could not start {0}. ".format(i.id) + str(e))
+            continue
+
+    return
+
 @instances.command('snapshot', help="Create snapshots of all volumes")
 @click.option('--project', default=None, help='Only snapshots for project')
-def create_snapshots(project):
+@click.option('--force', default=False, is_flag=True, help="Force snapshot procedures")
+def create_snapshots(project, force):
     "Create snapshots for EC2 instances"
 
     instances = filter_instances(project)
+
+    if project:
+        filters = [{'Name':'tag:Project', 'Values':[project]}]
+        instances = ec2.instances.filter(Filters=filters)
+    elif force:
+        instances  = ec2.instances.all()
+    else:
+        print('Use the --force flag for batch starts')
+        return
 
     for i in instances:
 
